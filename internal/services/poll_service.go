@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/teodora-lazarevic/Poll-App/ent"
 	"github.com/teodora-lazarevic/Poll-App/ent/poll"
@@ -14,12 +13,12 @@ type PollService struct {
 	DB *ent.Client
 }
 
-var (
-	ErrUnauthorized       = errors.New("Unauthorized action")
-	ErrDuplicateOption    = errors.New("Duplicate option text")
-	ErrPollNotFound       = errors.New("Poll not found")
-	ErrPollOptionNotFound = errors.New("Poll option not found")
-)
+// var (
+// 	ErrUnauthorized       = errors.New("Unauthorized action")
+// 	ErrDuplicateOption    = errors.New("Duplicate option text")
+// 	ErrPollNotFound       = errors.New("Poll not found")
+// 	ErrPollOptionNotFound = errors.New("Poll option not found")
+// )
 
 func NewPollService(db *ent.Client) *PollService {
 	return &PollService{DB: db}
@@ -33,11 +32,16 @@ func (s *PollService) ListPolls(ctx context.Context) ([]*ent.Poll, error) {
 }
 
 func (s *PollService) GetPollById(ctx context.Context, pollId int) (*ent.Poll, error) {
-	return s.DB.Poll.Query().
+	p, err := s.DB.Poll.Query().
 		Where(poll.IDEQ(pollId)).
 		WithOptions().
 		WithCreator().
 		Only(ctx)
+
+	if ent.IsNotFound(err) {
+		return nil, ErrPollNotFound // Map ORM error to Domain Error
+	}
+	return p, err
 }
 
 func (s *PollService) CreatePoll(ctx context.Context, userId int, title, description string, options []string) (*ent.Poll, error) {

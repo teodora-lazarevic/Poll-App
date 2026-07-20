@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/teodora-lazarevic/Poll-App/internal/handlers"
+	"github.com/teodora-lazarevic/Poll-App/internal/middleware"
 )
 
 func SetupRouter(appCtx *handlers.AppContext) *httprouter.Router {
@@ -12,14 +13,14 @@ func SetupRouter(appCtx *handlers.AppContext) *httprouter.Router {
 	router.GET("/health", handlers.HealthCheckHandler)
 
 	// poll endpoints
-	router.POST("/polls", appCtx.CreatePollHandler)
-	router.POST("/polls/:poll_id/options", appCtx.AddPollOptionHandler)
+	router.POST("/polls", middleware.RequireAuth(appCtx.CreatePollHandler))
+	router.POST("/polls/:poll_id/options", middleware.RequireAuth(appCtx.AddPollOptionHandler))
 
 	router.GET("/polls", appCtx.ListPollsHandler)
 	router.GET("/polls/:poll_id", appCtx.GetPollByIdHandler)
 
-	router.DELETE("/polls/:poll_id", appCtx.DeletePollHandler)
-	router.DELETE("/polls/:poll_id/options/:option_id", appCtx.DeletePollOptionHandler)
+	router.DELETE("/polls/:poll_id", middleware.RequireAuth(appCtx.DeletePollHandler))
+	router.DELETE("/polls/:poll_id/options/:option_id", middleware.RequireAuth(appCtx.DeletePollOptionHandler))
 
 	// auth endpoints
 	router.POST("/users/register", appCtx.RegisterHandler)
@@ -29,10 +30,10 @@ func SetupRouter(appCtx *handlers.AppContext) *httprouter.Router {
 	router.GET("/users/:user_id", appCtx.GetUserByIdHandler)
 
 	// vote endpoints
-	router.POST("/polls/:poll_id/vote", appCtx.VoteHandler)
+	router.POST("/polls/:poll_id/vote", middleware.RequireAuth(appCtx.VoteHandler))
 
 	router.GET("/polls/:poll_id/results", appCtx.GetPollResultsHandler)
-	router.GET("/polls/:poll_id/options/:option_id/voters", appCtx.GetVotersHandler)
+	router.GET("/polls/:poll_id/options/:option_id/voters", middleware.RequireAuth(appCtx.GetVotersHandler))
 
 	return router
 }

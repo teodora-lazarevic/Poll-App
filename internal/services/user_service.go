@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"regexp"
 
 	"github.com/teodora-lazarevic/Poll-App/ent"
@@ -12,13 +11,13 @@ import (
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
-// Custom errors so the handler knows what went wrong
-var (
-	ErrInvalidInput = errors.New("invalid username, email, or password")
-	ErrUserExists   = errors.New("user already exists")
-	ErrInvalidCreds = errors.New("invalid credentials")
-	ErrUserNotFound = errors.New("user not found")
-)
+// // Custom errors so the handler knows what went wrong
+// var (
+// 	ErrInvalidInput = errors.New("Invalid username, email, or password")
+// 	ErrUserExists   = errors.New("User already exists")
+// 	ErrInvalidCreds = errors.New("Invalid credentials")
+// 	ErrUserNotFound = errors.New("User not found")
+// )
 
 type UserService struct {
 	DB *ent.Client

@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/teodora-lazarevic/Poll-App/internal/db"
 	"github.com/teodora-lazarevic/Poll-App/internal/handlers"
 	"github.com/teodora-lazarevic/Poll-App/internal/router"
@@ -11,8 +13,16 @@ import (
 )
 
 func main() {
+	// Loading environment variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file")
+	}
 
-	dbURL := "host=localhost port=5432 user=postgres dbname=pollingapp password=secret sslmode=disable"
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL is not set")
+	}
 
 	client := db.InitDB(dbURL)
 	defer client.Close()

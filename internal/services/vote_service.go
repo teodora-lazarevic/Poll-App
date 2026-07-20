@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/teodora-lazarevic/Poll-App/ent"
 	"github.com/teodora-lazarevic/Poll-App/ent/poll"
@@ -11,10 +10,10 @@ import (
 	"github.com/teodora-lazarevic/Poll-App/ent/vote"
 )
 
-var (
-	ErrAlreadyVoted    = errors.New("user has already voted for this poll")
-	ErrOptionNotInPoll = errors.New("option does not belong to this poll")
-)
+// var (
+// 	ErrAlreadyVoted    = errors.New("User has already voted for this poll")
+// 	ErrOptionNotInPoll = errors.New("Option does not belong to this poll")
+// )
 
 type PollResult struct {
 	OptionID   int    `json:"option_id"`
@@ -47,23 +46,45 @@ func (s *VoteService) CastVote(ctx context.Context, userId, pollId, optionId int
 		return ErrPollNotFound
 	}
 
-	option, err := s.DB.PollOption.Query().Where(polloption.ID(optionId), polloption.HasPollWith(poll.ID(pollId))).First(ctx)
+	option, err := s.DB.PollOption.Query().
+		Where(polloption.ID(optionId), polloption.HasPollWith(poll.ID(pollId))).
+		First(ctx)
+
 	if ent.IsNotFound(err) {
 		return ErrOptionNotInPoll
 	} else if err != nil {
 		return err
 	}
 
-	hasVoted, err := s.DB.Vote.Query().Where(vote.HasUserWith(user.IDEQ(userId)), vote.HasPollWith(poll.IDEQ(pollId))).Exist(ctx)
+	tx, err := s.DB.Tx(ctx)
+	if err != nil {
+		return err
+	}
+
+	hasVoted, err := s.DB.Vote.Query().
+		Where(vote.HasUserWith(user.IDEQ(userId)), vote.HasPollWith(poll.IDEQ(pollId))).
+		Exist(ctx)
+
 	if err != nil {
 		return err
 	}
 	if hasVoted {
+		tx.Rollback()
 		return ErrAlreadyVoted
 	}
 
-	_, err = s.DB.Vote.Create().SetUser(voter).SetOption(option).SetPoll(fetchedPoll).Save(ctx)
-	return err
+	_, err = tx.Vote.Create().
+		SetUser(voter).
+		SetOption(option).
+		SetPoll(fetchedPoll).
+		Save(ctx)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (s *VoteService) GetPollResults(ctx context.Context, pollId int) ([]PollResult, error) {
