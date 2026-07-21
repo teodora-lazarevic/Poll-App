@@ -146,3 +146,13 @@ func (appCtx *AppContext) DeletePollOptionHandler(writer http.ResponseWriter, re
 	utils.WriteJSON(writer, http.StatusOK, "Option deleted successfully")
 
 }
+
+func (appCtx *AppContext) ClearAllDataHandler(writer http.ResponseWriter, request *http.Request, _ httprouter.Params) {
+	err := appCtx.PollService.ClearAllData(request.Context())
+	if err != nil {
+		HandleError(writer, err)
+		return
+	}
+
+	utils.WriteJSON(writer, http.StatusOK, "All data cleared successfully")
+}
