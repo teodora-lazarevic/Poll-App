@@ -21,7 +21,7 @@ func SetupRouter(appCtx *handlers.AppContext) *httprouter.Router {
 
 	router.DELETE("/polls/:poll_id", middleware.RequireAuth(appCtx.DeletePollHandler))
 	router.DELETE("/polls/:poll_id/options/:option_id", middleware.RequireAuth(appCtx.DeletePollOptionHandler))
-	router.DELETE("/polls/clear", middleware.RequireAuth(appCtx.ClearAllDataHandler))
+	router.DELETE("/clear", middleware.RequireAuth(appCtx.ClearAllDataHandler))
 
 	// auth endpoints
 	router.POST("/users/register", appCtx.RegisterHandler)
