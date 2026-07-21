@@ -13,13 +13,6 @@ type PollService struct {
 	DB *ent.Client
 }
 
-// var (
-// 	ErrUnauthorized       = errors.New("Unauthorized action")
-// 	ErrDuplicateOption    = errors.New("Duplicate option text")
-// 	ErrPollNotFound       = errors.New("Poll not found")
-// 	ErrPollOptionNotFound = errors.New("Poll option not found")
-// )
-
 func NewPollService(db *ent.Client) *PollService {
 	return &PollService{DB: db}
 }
@@ -149,4 +142,27 @@ func (s *PollService) DeletePollOption(ctx context.Context, userId, pollId, opti
 	}
 
 	return nil
+}
+
+func (s *PollService) ClearAllData(ctx context.Context) error {
+	tx, err := s.DB.Tx(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Vote.Delete().Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.DB.PollOption.Delete().Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.DB.Poll.Delete().Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
 }
